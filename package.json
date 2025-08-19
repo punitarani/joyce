@@ -1,0 +1,22 @@
+{
+  "name": "joyce-voice-turbo",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "build": "turbo build",
+    "dev": "turbo dev",
+    "agent": "turbo agent",
+    "server": "turbo server",
+    "mobile:android": "turbo android",
+    "mobile:ios": "turbo ios",
+    "mobile:start": "turbo start",
+    "lint": "turbo lint",
+    "format": "turbo format",
+    "clean": "turbo clean"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "latest",
+    "turbo": "latest"
+  },
+  "packageManager": "bun@1.0.0"
+}

@@ -1,0 +1,30 @@
+{
+  "name": "server",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "bun src/agent.ts dev",
+    "agent": "bun src/agent.ts dev",
+    "server": "bun src/server.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "lint": "biome lint src/ --write --unsafe",
+    "format": "biome format src/ --write"
+  },
+  "dependencies": {
+    "@livekit/agents": "latest",
+    "@livekit/agents-plugin-openai": "latest",
+    "livekit-server-sdk": "latest",
+    "dotenv": "latest",
+    "express": "latest",
+    "@t3-oss/env-core": "latest",
+    "zod": "latest"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/express": "latest",
+    "typescript": "latest",
+    "tsx": "latest"
+  }
+}

@@ -1,0 +1,41 @@
+{
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", "android/app/build/**", "ios/build/**"]
+    },
+    "dev": {
+      "cache": false,
+      "persistent": true
+    },
+    "server": {
+      "cache": false,
+      "persistent": true
+    },
+    "agent": {
+      "cache": false,
+      "persistent": true
+    },
+    "android": {
+      "cache": false,
+      "persistent": true
+    },
+    "ios": {
+      "cache": false,
+      "persistent": true
+    },
+    "start": {
+      "cache": false,
+      "persistent": true
+    },
+    "lint": {
+      "dependsOn": ["^lint"]
+    },
+    "format": {
+      "dependsOn": ["^format"]
+    },
+    "clean": {
+      "cache": false
+    }
+  }
+}
