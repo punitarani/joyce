@@ -1,0 +1,35 @@
+[project]
+name = "agents"
+version = "0.1.0"
+description = "Joyce Voice Agents"
+readme = "README.md"
+requires-python = ">=3.13"
+
+dependencies = [
+    "livekit-agents[cartesia,deepgram,mcp,openai,silero,turn-detector]",
+    "livekit-plugins-noise-cancellation",
+    "python-dotenv",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "B", "A", "C4", "UP", "SIM", "RUF"]
+ignore = ["E501"]  # Line too long (handled by formatter)
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

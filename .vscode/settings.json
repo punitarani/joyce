@@ -14,5 +14,9 @@
     "**/node_modules": true,
     "**/dist": true,
     "**/.turbo": true
+  },
+  "python.defaultInterpreterPath": "./apps/agents/.venv/bin/python",
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter"
   }
 }
