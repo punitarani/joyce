@@ -1,0 +1,11 @@
+{
+	"name": "server",
+	"private": true,
+	"scripts": {
+		"build": "echo 'Can not build a Python package'",
+		"dev": "poetry run python main.py",
+		"server": "poetry run python main.py",
+		"lint": "poetry run ruff check --fix .",
+		"format": "poetry run ruff format ."
+	}
+}

@@ -1,0 +1,39 @@
+[project]
+name = "server"
+version = "0.1.0"
+description = "Joyce Server"
+readme = "README.md"
+requires-python = ">=3.13"
+authors = [
+    {name = "Punit Arani", email = "punitsai36@gmail.com"}
+]
+
+dependencies = [
+    "fastapi[standard]>=0.116.1",
+    "livekit-agents[cartesia,deepgram,mcp,openai,silero,turn-detector]",
+    "livekit-plugins-noise-cancellation",
+    "python-dotenv",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-asyncio",
+    "ruff",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.ruff]
+line-length = 88
+target-version = "py38"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "N", "UP", "S", "B", "A", "C4", "DTZ", "T10", "DJ", "EXE", "FA", "ISC", "ICN", "G", "INP", "PIE", "T20", "PYI", "PT", "Q", "RSE", "RET", "SLF", "SLOT", "SIM", "TID", "TCH", "INT", "ARG", "PTH", "ERA", "PD", "PGH", "PL", "FLY", "NPY", "AIR", "PERF", "FURB", "LOG", "RUF"]
+ignore = ["S101", "T201", "PLR2004", "UP006", "UP045", "TRY003", "EM101", "ANN001", "ANN201", "ANN202", "F841", "COM812", "SLF001", "ARG001", "PERF401", "S311", "B007", "PT018", "E501", "PIE808", "F541", "RUF003"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
