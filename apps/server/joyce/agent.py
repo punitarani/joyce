@@ -1,5 +1,6 @@
 import logging
 
+from env import create_env
 from livekit.agents import (
     NOT_GIVEN,
     Agent,
@@ -10,6 +11,8 @@ from livekit.agents import (
     MetricsCollectedEvent,
     RoomInputOptions,
     RunContext,
+    WorkerOptions,
+    cli,
     metrics,
 )
 from livekit.agents.llm import function_tool
@@ -305,3 +308,9 @@ async def entrypoint(ctx: JobContext):
 
     # Join the room and connect to the user
     await ctx.connect()
+
+
+if __name__ == "__main__":
+    print("🤖 Starting Joyce agent...")
+    create_env()
+    cli.run_app(WorkerOptions(entrypoint_fnc=entrypoint, prewarm_fnc=prewarm))
