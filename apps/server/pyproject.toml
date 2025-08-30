@@ -12,6 +12,7 @@ dependencies = [
     "fastapi[standard]>=0.116.1",
     "livekit-agents[cartesia,deepgram,mcp,openai,silero,turn-detector]",
     "livekit-plugins-noise-cancellation",
+    "pydantic>=2.11.7",
     "python-dotenv",
 ]
 
@@ -19,6 +20,7 @@ dependencies = [
 dev = [
     "pytest",
     "pytest-asyncio",
+    "python-dotenv>=1.1.1",
     "ruff",
 ]
 
