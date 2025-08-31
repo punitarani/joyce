@@ -12,14 +12,16 @@ from .env import env
 
 
 class TokenRequest(BaseModel):
-    room_name: str
-    participant_name: str
+    room_name: str | None = None
+    participant_name: str | None = None
+    room_config: dict[str, Any] | None = None
 
 
 class TokenResponse(BaseModel):
-    token: str
-    room_name: str
-    livekit_url: str
+    serverUrl: str
+    participantToken: str
+    roomName: str
+    participantName: str
 
 
 @asynccontextmanager
@@ -59,7 +61,7 @@ async def root() -> dict[str, Any]:
 
 @app.post("/api/token")
 async def create_token(request: TokenRequest) -> TokenResponse:
-    """Create a LiveKit access token for joining a room."""
+    """Create LiveKit connection details for joining a room."""
     if not env.LIVEKIT_API_KEY or not env.LIVEKIT_API_SECRET:
         raise HTTPException(
             status_code=500,
@@ -67,15 +69,24 @@ async def create_token(request: TokenRequest) -> TokenResponse:
         )
 
     try:
+        # Generate room name if not provided
+        room_name = request.room_name or f"room-{__import__('uuid').uuid4().hex[:8]}"
+
+        # Generate participant name if not provided
+        participant_name = (
+            request.participant_name
+            or f"participant-{__import__('uuid').uuid4().hex[:8]}"
+        )
+
         # Create access token using the modern LiveKit API pattern
         jwt_token = (
             api.AccessToken(env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET)
-            .with_identity(request.participant_name)
-            .with_name(request.participant_name)
+            .with_identity(participant_name)
+            .with_name(participant_name)
             .with_grants(
                 api.VideoGrants(
                     room_join=True,
-                    room=request.room_name,
+                    room=room_name,
                     # Allow the participant to publish audio/video
                     can_publish=True,
                     can_subscribe=True,
@@ -86,9 +97,10 @@ async def create_token(request: TokenRequest) -> TokenResponse:
         )
 
         return TokenResponse(
-            token=jwt_token,
-            room_name=request.room_name,
-            livekit_url=env.LIVEKIT_URL or "wss://localhost:7880",
+            serverUrl=env.LIVEKIT_URL or "wss://localhost:7880",
+            participantToken=jwt_token,
+            roomName=room_name,
+            participantName=participant_name,
         )
 
     except Exception as e:

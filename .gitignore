@@ -3,3 +3,13 @@ node_modules
 dist
 
 .env
+
+# Local Build
+android/
+ios/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts

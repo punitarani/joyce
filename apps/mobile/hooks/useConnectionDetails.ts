@@ -1,19 +1,15 @@
 import { useEffect, useState } from "react";
 
-// TODO: Add your Sandbox ID here
-const sandboxID = "joyce-1dmuvv";
-const tokenEndpoint =
-	"https://cloud-api.livekit.io/api/sandbox/connection-details";
+// Production token server configuration
+const API_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+const tokenEndpoint = `${API_URL}/api/token`;
 
 // For use without a token server.
 const hardcodedUrl = "";
 const hardcodedToken = "";
 
 /**
- * Retrieves a LiveKit token.
- *
- * Currently configured to use LiveKit's Sandbox token server.
- * When building an app for production, you should use your own token server.
+ * Retrieves a LiveKit token from the Joyce production server.
  */
 export function useConnectionDetails(): ConnectionDetails | undefined {
 	const [details, setDetails] = useState<ConnectionDetails | undefined>(() => {
@@ -30,19 +26,30 @@ export function useConnectionDetails(): ConnectionDetails | undefined {
 }
 
 export async function fetchToken(): Promise<ConnectionDetails | undefined> {
-	if (!sandboxID) {
+	// Fallback to hardcoded values if configured
+	if (hardcodedUrl && hardcodedToken) {
 		return {
 			url: hardcodedUrl,
 			token: hardcodedToken,
 		};
 	}
-	const fetchToken = async () => {
-		if (!sandboxID) {
-			return undefined;
-		}
+
+	try {
 		const response = await fetch(tokenEndpoint, {
-			headers: { "X-Sandbox-ID": sandboxID },
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+			},
+			body: JSON.stringify({
+				room_name: "joyce-room",
+				participant_name: "mobile-user",
+			}),
 		});
+
+		if (!response.ok) {
+			throw new Error(`HTTP error! status: ${response.status}`);
+		}
+
 		const json = await response.json();
 
 		if (json.serverUrl && json.participantToken) {
@@ -53,8 +60,10 @@ export async function fetchToken(): Promise<ConnectionDetails | undefined> {
 		} else {
 			return undefined;
 		}
-	};
-	return fetchToken();
+	} catch (error) {
+		console.error("Failed to fetch token from server:", error);
+		return undefined;
+	}
 }
 
 export type ConnectionDetails = {

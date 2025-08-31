@@ -1,11 +1,15 @@
 {
   "name": "joyce",
   "private": true,
-  "workspaces": ["apps/*", "packages/*"],
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
     "build": "turbo build",
-    "dev": "turbo dev",
+    "dev": "turbo dev & turbo agent",
     "server": "turbo server",
+    "agent": "turbo agent",
     "lint": "turbo lint",
     "format": "turbo format",
     "clean": "turbo clean"

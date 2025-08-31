@@ -1,7 +1,7 @@
 {
 	"expo": {
-		"name": "voice-assistant-react-native",
-		"slug": "voice-assistant-react-native",
+		"name": "Joyce",
+		"slug": "Joyce",
 		"version": "1.0.0",
 		"orientation": "portrait",
 		"icon": "./assets/images/icon.png",
@@ -11,7 +11,10 @@
 		"ios": {
 			"supportsTablet": true,
 			"bitcode": false,
-			"bundleIdentifier": "io.livekit.voiceassistantreactnative"
+			"bundleIdentifier": "io.livekit.voiceassistantreactnative",
+			"infoPlist": {
+				"NSMicrophoneUsageDescription": "This app needs access to your microphone to communicate with the voice assistant."
+			}
 		},
 		"android": {
 			"adaptiveIcon": {
