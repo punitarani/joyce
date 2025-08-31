@@ -1,22 +1,35 @@
 {
 	"expo": {
-		"name": "mobile",
-		"slug": "mobile",
+		"name": "voice-assistant-react-native",
+		"slug": "voice-assistant-react-native",
 		"version": "1.0.0",
 		"orientation": "portrait",
 		"icon": "./assets/images/icon.png",
-		"scheme": "mobile",
-		"userInterfaceStyle": "automatic",
+		"scheme": "myapp",
+		"userInterfaceStyle": "dark",
 		"newArchEnabled": true,
 		"ios": {
-			"supportsTablet": true
+			"supportsTablet": true,
+			"bitcode": false,
+			"bundleIdentifier": "io.livekit.voiceassistantreactnative"
 		},
 		"android": {
 			"adaptiveIcon": {
 				"foregroundImage": "./assets/images/adaptive-icon.png",
 				"backgroundColor": "#ffffff"
 			},
-			"edgeToEdgeEnabled": true
+			"package": "io.livekit.voiceassistantreactnative",
+			"permissions": [
+				"android.permission.ACCESS_NETWORK_STATE",
+				"android.permission.CAMERA",
+				"android.permission.INTERNET",
+				"android.permission.MODIFY_AUDIO_SETTINGS",
+				"android.permission.RECORD_AUDIO",
+				"android.permission.SYSTEM_ALERT_WINDOW",
+				"android.permission.WAKE_LOCK",
+				"android.permission.BLUETOOTH"
+			],
+			"softwareKeyboardLayoutMode": "pan"
 		},
 		"web": {
 			"bundler": "metro",
@@ -25,6 +38,8 @@
 		},
 		"plugins": [
 			"expo-router",
+			"@livekit/react-native-expo-plugin",
+			"@config-plugins/react-native-webrtc",
 			[
 				"expo-splash-screen",
 				{

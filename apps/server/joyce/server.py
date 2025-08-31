@@ -18,6 +18,7 @@ class TokenRequest(BaseModel):
 class TokenResponse(BaseModel):
     token: str
     room_name: str
+    livekit_url: str
 
 
 # Get LiveKit credentials from environment
@@ -93,7 +94,11 @@ async def create_token(request: TokenRequest) -> TokenResponse:
             .to_jwt()
         )
 
-        return TokenResponse(token=jwt_token, room_name=request.room_name)
+        return TokenResponse(
+            token=jwt_token, 
+            room_name=request.room_name,
+            livekit_url=LIVEKIT_URL or "wss://localhost:7880"
+        )
 
     except Exception as e:
         raise HTTPException(

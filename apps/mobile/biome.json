@@ -1,16 +1,14 @@
 {
 	"$schema": "https://biomejs.dev/schemas/2.2.2/schema.json",
-	"vcs": { "clientKind": "git", "enabled": false, "useIgnoreFile": false },
+	"vcs": { "enabled": false, "clientKind": "git", "useIgnoreFile": false },
 	"files": { "ignoreUnknown": false },
 	"formatter": { "enabled": true, "indentStyle": "tab" },
 	"linter": {
 		"enabled": true,
 		"rules": {
 			"recommended": false,
-			"a11y": {},
 			"complexity": {},
 			"correctness": {
-				"noChildrenProp": "error",
 				"noEmptyCharacterClassInRegex": "warn",
 				"noEmptyPattern": "warn",
 				"noUndeclaredVariables": "error",
@@ -20,16 +18,11 @@
 				"useExhaustiveDependencies": "warn",
 				"useHookAtTopLevel": "error",
 				"useIsNan": "error",
-				"useJsxKeyInIterable": "error",
 				"useValidTypeof": "error"
 			},
-			"security": {
-				"noDangerouslySetInnerHtmlWithChildren": "error",
-				"noBlankTarget": "off"
-			},
-			"style": {},
+			"security": { "noDangerouslySetInnerHtmlWithChildren": "warn" },
+			"style": { "useBlockStatements": "off" },
 			"suspicious": {
-				"noCommentText": "error",
 				"noDoubleEquals": "warn",
 				"noDuplicateCase": "error",
 				"noDuplicateClassMembers": "error",
@@ -38,154 +31,22 @@
 				"noDuplicateParameters": "error",
 				"noRedeclare": "warn",
 				"noUnsafeNegation": "warn",
-				"noWith": "warn",
-				"noVar": "error"
+				"noVar": "error",
+				"noWith": "warn"
 			}
 		},
-		"includes": ["**", "!**/android/app/build", "!**/dist/**/*"]
+		"includes": ["**", "dist/*", "**/*.d.ts", "android/app/build"]
 	},
 	"javascript": {
 		"formatter": { "quoteStyle": "double" },
-		"globals": [
-			"onscrollend",
-			"onpointerleave",
-			"oncontextrestored",
-			"onemptied",
-			"ongamepaddisconnected",
-			"onkeypress",
-			"onloadeddata",
-			"onmouseup",
-			"onvolumechange",
-			"onpaste",
-			"onstorage",
-			"onkeyup",
-			"onabort",
-			"oncut",
-			"ontransitionrun",
-			"onafterprint",
-			"onblur",
-			"ondurationchange",
-			"ontransitionstart",
-			"oncanplaythrough",
-			"onanimationend",
-			"onmouseleave",
-			"ondragleave",
-			"onplay",
-			"onunhandledrejection",
-			"onbeforeprint",
-			"oncommand",
-			"onpointercancel",
-			"onsubmit",
-			"ondragstart",
-			"onmessage",
-			"location",
-			"onoffline",
-			"onappinstalled",
-			"onwheel",
-			"onended",
-			"onkeydown",
-			"onclick",
-			"onfocus",
-			"onscroll",
-			"ongamepadconnected",
-			"oncanplay",
-			"onpointerdown",
-			"ondeviceorientationabsolute",
-			"shared-node-browser",
-			"onauxclick",
-			"ondevicemotion",
-			"onratechange",
-			"ontransitionend",
-			"onscrollsnapchanging",
-			"onchange",
-			"onselect",
-			"onbeforeinstallprompt",
-			"onbeforetoggle",
-			"onmouseout",
-			"ontimeupdate",
-			"ondragover",
-			"oncuechange",
-			"ontransitioncancel",
-			"onprogress",
-			"onbeforeinput",
-			"onpointerenter",
-			"onmouseenter",
-			"oninvalid",
-			"onpointerout",
-			"onpagereveal",
-			"onpause",
-			"onanimationstart",
-			"onwaiting",
-			"onscrollsnapchange",
-			"ondeviceorientation",
-			"onclose",
-			"onbeforeunload",
-			"oncancel",
-			"onseeked",
-			"onpointerover",
-			"ongotpointercapture",
-			"onloadedmetadata",
-			"onpageshow",
-			"onstalled",
-			"oncontextmenu",
-			"onreset",
-			"ondrag",
-			"onbeforematch",
-			"onload",
-			"onlostpointercapture",
-			"onsuspend",
-			"onselectionchange",
-			"onpagehide",
-			"onrejectionhandled",
-			"onunload",
-			"onanimationcancel",
-			"onmousedown",
-			"onpointerup",
-			"onmouseover",
-			"onformdata",
-			"oncontentvisibilityautostatechange",
-			"onresize",
-			"onsearch",
-			"ontoggle",
-			"onpageswap",
-			"onbeforexrselect",
-			"onlanguagechange",
-			"ondragenter",
-			"onerror",
-			"onpointermove",
-			"onmousemove",
-			"ondrop",
-			"onhashchange",
-			"onsecuritypolicyviolation",
-			"onslotchange",
-			"oncopy",
-			"onanimationiteration",
-			"ondblclick",
-			"ondragend",
-			"onpointerrawupdate",
-			"onpopstate",
-			"onplaying",
-			"oncontextlost",
-			"onloadstart",
-			"onseeking",
-			"oninput",
-			"onmessageerror",
-			"onselectstart",
-			"__DEV__",
-			"onmousewheel",
-			"ononline"
-		]
+		"globals": ["console", "shared-node-browser", "__DEV__"]
 	},
 	"overrides": [
-		{ "includes": ["**/*.d.ts"], "linter": { "rules": {} } },
+		{},
+		{ "linter": { "rules": {} } },
+		{},
+		{},
 		{
-			"includes": ["**/metro.config.js"],
-			"javascript": { "globals": ["exports"] }
-		},
-		{ "includes": ["**/*.js", "**/*.jsx"] },
-		{
-			"includes": ["**/*.ts", "**/*.tsx", "**/*.d.ts"],
-			"javascript": { "globals": [] },
 			"linter": {
 				"rules": {
 					"complexity": { "noUselessConstructor": "warn" },
@@ -207,6 +68,33 @@
 				}
 			}
 		},
-		{ "includes": ["**/*.web.*", "**/*.app.*"] }
+		{ "includes": ["*.web.*"] },
+		{ "includes": ["*.d.ts"], "linter": { "rules": {} } },
+		{ "includes": ["metro.config.js"] },
+		{ "includes": ["*.js", "*.jsx"] },
+		{
+			"includes": ["*.ts", "*.tsx", "*.d.ts"],
+			"linter": {
+				"rules": {
+					"complexity": { "noUselessConstructor": "warn" },
+					"correctness": {
+						"noUndeclaredVariables": "off",
+						"noUnusedVariables": "warn"
+					},
+					"style": {
+						"noCommonJs": "warn",
+						"useConsistentArrayType": {
+							"level": "warn",
+							"options": { "syntax": "shorthand" }
+						}
+					},
+					"suspicious": {
+						"noDuplicateClassMembers": "error",
+						"noExtraNonNullAssertion": "warn",
+						"noRedeclare": "warn"
+					}
+				}
+			}
+		}
 	]
 }
