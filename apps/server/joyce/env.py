@@ -18,9 +18,6 @@ class Environment(BaseModel):
     # App URLs
     API_URL: str = Field(default="http://localhost:3000", description="Backend API URL")
 
-    # Letta Configuration
-    LETTA_API_KEY: Optional[str] = Field(default=None, description="Letta API key")
-
     # LiveKit Configuration
     LIVEKIT_URL: Optional[str] = Field(default=None, description="LiveKit server URL")
     LIVEKIT_API_KEY: Optional[str] = Field(default=None, description="LiveKit API key")
@@ -30,6 +27,16 @@ class Environment(BaseModel):
 
     # OpenAI Configuration
     OPENAI_API_KEY: Optional[str] = Field(default=None, description="OpenAI API key")
+
+    # Database Configuration
+    DB_URL: Optional[str] = Field(default=None, description="Database URL")
+
+    # ChromaDB Configuration
+    CHROMA_API_KEY: Optional[str] = Field(default=None, description="ChromaDB API key")
+    CHROMA_TENANT: Optional[str] = Field(default=None, description="ChromaDB tenant")
+    CHROMA_DATABASE: Optional[str] = Field(
+        default=None, description="ChromaDB database"
+    )
 
     model_config = {
         "env_file": ".env",
@@ -72,7 +79,10 @@ def create_env() -> Environment:
             PORT=int(os.getenv("PORT", "3000")),
             NODE_ENV=os.getenv("NODE_ENV", "development"),
             API_URL=os.getenv("API_URL", "http://localhost:3000"),
-            LETTA_API_KEY=os.getenv("LETTA_API_KEY"),
+            DB_URL=os.getenv("DB_URL"),
+            CHROMA_API_KEY=os.getenv("CHROMA_API_KEY"),
+            CHROMA_TENANT=os.getenv("CHROMA_TENANT"),
+            CHROMA_DATABASE=os.getenv("CHROMA_DATABASE"),
             LIVEKIT_URL=os.getenv("LIVEKIT_URL"),
             LIVEKIT_API_KEY=os.getenv("LIVEKIT_API_KEY"),
             LIVEKIT_API_SECRET=os.getenv("LIVEKIT_API_SECRET"),

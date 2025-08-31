@@ -7,6 +7,8 @@
     "server": "uv run python main.py",
     "agent": "uv run python -m joyce.agent.run dev",
     "lint": "uv run ruff check --fix .",
-    "format": "uv run ruff format ."
+    "format": "uv run ruff format .",
+    "db:generate": "uv run alembic revision --autogenerate -m",
+    "db:migrate": "uv run alembic upgrade head"
   }
 }
