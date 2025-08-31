@@ -5,7 +5,7 @@
     "build": "echo 'Can not build a Python package'",
     "dev": "uv run python main.py",
     "server": "uv run python main.py",
-    "agent": "uv run python joyce/agent.py dev",
+    "agent": "uv run python -m joyce.agent.run dev",
     "lint": "uv run ruff check --fix .",
     "format": "uv run ruff format ."
   }

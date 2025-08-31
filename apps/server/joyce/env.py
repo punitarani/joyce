@@ -18,6 +18,9 @@ class Environment(BaseModel):
     # App URLs
     API_URL: str = Field(default="http://localhost:3000", description="Backend API URL")
 
+    # Letta Configuration
+    LETTA_API_KEY: Optional[str] = Field(default=None, description="Letta API key")
+
     # LiveKit Configuration
     LIVEKIT_URL: Optional[str] = Field(default=None, description="LiveKit server URL")
     LIVEKIT_API_KEY: Optional[str] = Field(default=None, description="LiveKit API key")
@@ -69,6 +72,7 @@ def create_env() -> Environment:
             PORT=int(os.getenv("PORT", "3000")),
             NODE_ENV=os.getenv("NODE_ENV", "development"),
             API_URL=os.getenv("API_URL", "http://localhost:3000"),
+            LETTA_API_KEY=os.getenv("LETTA_API_KEY"),
             LIVEKIT_URL=os.getenv("LIVEKIT_URL"),
             LIVEKIT_API_KEY=os.getenv("LIVEKIT_API_KEY"),
             LIVEKIT_API_SECRET=os.getenv("LIVEKIT_API_SECRET"),
