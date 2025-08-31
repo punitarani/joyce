@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import os
 from contextlib import asynccontextmanager
 from typing import Any
 
@@ -8,6 +7,8 @@ from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from livekit import api
 from pydantic import BaseModel
+
+from .env import env
 
 
 class TokenRequest(BaseModel):
@@ -21,20 +22,10 @@ class TokenResponse(BaseModel):
     livekit_url: str
 
 
-# Get LiveKit credentials from environment
-LIVEKIT_API_KEY = os.getenv("LIVEKIT_API_KEY")
-LIVEKIT_API_SECRET = os.getenv("LIVEKIT_API_SECRET")
-LIVEKIT_URL = os.getenv("LIVEKIT_URL")
-
-if not LIVEKIT_API_KEY or not LIVEKIT_API_SECRET:
-    print("Warning: LIVEKIT_API_KEY and LIVEKIT_API_SECRET must be set")
-    print("Set them in your environment or .env file")
-
-
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print(f"🚀 Joyce server starting...")
-    print(f"🔗 LiveKit URL: {LIVEKIT_URL}")
+    print(f"🔗 LiveKit URL: {env.LIVEKIT_URL}")
     yield
     print("👋 Joyce server shutting down...")
 
@@ -62,14 +53,14 @@ async def root() -> dict[str, Any]:
     return {
         "message": "Joyce server is running",
         "version": "1.0.0",
-        "livekit_configured": bool(LIVEKIT_API_KEY and LIVEKIT_API_SECRET),
+        "livekit_configured": bool(env.LIVEKIT_API_KEY and env.LIVEKIT_API_SECRET),
     }
 
 
 @app.post("/api/token")
 async def create_token(request: TokenRequest) -> TokenResponse:
     """Create a LiveKit access token for joining a room."""
-    if not LIVEKIT_API_KEY or not LIVEKIT_API_SECRET:
+    if not env.LIVEKIT_API_KEY or not env.LIVEKIT_API_SECRET:
         raise HTTPException(
             status_code=500,
             detail="LiveKit credentials not configured. Please set LIVEKIT_API_KEY and LIVEKIT_API_SECRET environment variables.",
@@ -78,7 +69,7 @@ async def create_token(request: TokenRequest) -> TokenResponse:
     try:
         # Create access token using the modern LiveKit API pattern
         jwt_token = (
-            api.AccessToken(LIVEKIT_API_KEY, LIVEKIT_API_SECRET)
+            api.AccessToken(env.LIVEKIT_API_KEY, env.LIVEKIT_API_SECRET)
             .with_identity(request.participant_name)
             .with_name(request.participant_name)
             .with_grants(
@@ -95,9 +86,9 @@ async def create_token(request: TokenRequest) -> TokenResponse:
         )
 
         return TokenResponse(
-            token=jwt_token, 
+            token=jwt_token,
             room_name=request.room_name,
-            livekit_url=LIVEKIT_URL or "wss://localhost:7880"
+            livekit_url=env.LIVEKIT_URL or "wss://localhost:7880",
         )
 
     except Exception as e:
@@ -110,13 +101,13 @@ async def create_token(request: TokenRequest) -> TokenResponse:
 @app.get("/api/health")
 async def health_check() -> dict[str, Any]:
     """Detailed health check with LiveKit connection status."""
-    livekit_configured = bool(LIVEKIT_API_KEY and LIVEKIT_API_SECRET)
+    livekit_configured = bool(env.LIVEKIT_API_KEY and env.LIVEKIT_API_SECRET)
 
     return {
         "status": "healthy",
         "livekit": {
             "configured": livekit_configured,
-            "url": LIVEKIT_URL,
+            "url": env.LIVEKIT_URL,
         },
     }
 
@@ -127,7 +118,7 @@ if __name__ == "__main__":
     uvicorn.run(
         "joyce.server:app",
         host="127.0.0.1",  # Bind to localhost only for security
-        port=3000,
+        port=env.PORT,
         reload=True,
         log_level="info",
     )
