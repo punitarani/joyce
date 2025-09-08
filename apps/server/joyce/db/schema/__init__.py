@@ -9,16 +9,12 @@ from __future__ import annotations
 
 from .base import Base
 from .memory import Memory
-from .memory_chunk import MemoryChunk
-from .memory_tag import MemoryTag
-from .tag import Tag
+from .user_entities import UserEntity
 from .user_profile import UserProfile
 
 __all__ = [
     "Base",
     "Memory",
-    "MemoryChunk",
-    "MemoryTag",
-    "Tag",
+    "UserEntity",
     "UserProfile",
 ]

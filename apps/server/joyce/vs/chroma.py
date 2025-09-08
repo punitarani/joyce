@@ -15,7 +15,7 @@ chroma_store = None
 # Global instance for dependency injection
 def create_chroma_store() -> ChromaStore:
     """Factory function for creating ChromaStore instances."""
-    return ChromaStore(collection_name="joyce_memories")
+    return ChromaStore(collection_name="memories")
 
 
 def get_chroma_store() -> ChromaStore:
@@ -127,23 +127,28 @@ class ChromaStore:
     def create_metadata(
         user_id: str,
         memory_id: str,
-        chunk_id: str,
-        embedding_model: str = "text-embedding-3-small",
+        memory_type: str,
         tags: Optional[List[str]] = None,
         created_at: Optional[str] = None,
+        data: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         """Create standardized metadata for vector storage."""
         if created_at is None:
             created_at = datetime.now(timezone.utc).isoformat()
 
-        return {
+        metadata = {
             "user_id": user_id,
             "memory_id": memory_id,
-            "chunk_id": chunk_id,
-            "embedding_model": embedding_model,
+            "type": memory_type,
+            "tags": ",".join(tags) if tags else "",
             "created_at": created_at,
-            "tags": tags or [],
         }
+
+        # Merge additional data if provided
+        if data:
+            metadata.update(data)
+
+        return metadata
 
     @staticmethod
     def distance_to_similarity(distance: float) -> float:

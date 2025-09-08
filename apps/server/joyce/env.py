@@ -25,6 +25,25 @@ class Environment(BaseModel):
         default=None, description="LiveKit API secret"
     )
 
+    # Supabase Configuration
+    SUPABASE_URL: Optional[str] = Field(default=None, description="Supabase URL")
+    SUPABASE_SECRET_KEY: Optional[str] = Field(
+        default=None, description="Supabase secret key"
+    )
+    SUPABASE_PUBLISHABLE_KEY: Optional[str] = Field(
+        default=None, description="Supabase publishable key"
+    )
+
+    # AssemblyAI Configuration
+    ASSEMBLYAI_API_KEY: Optional[str] = Field(
+        default=None, description="AssemblyAI API key"
+    )
+
+    # Cartesia Configuration
+    CARTESIA_API_KEY: Optional[str] = Field(
+        default=None, description="Cartesia API key"
+    )
+
     # OpenAI Configuration
     OPENAI_API_KEY: Optional[str] = Field(default=None, description="OpenAI API key")
 
@@ -83,9 +102,14 @@ def create_env() -> Environment:
             CHROMA_API_KEY=os.getenv("CHROMA_API_KEY"),
             CHROMA_TENANT=os.getenv("CHROMA_TENANT"),
             CHROMA_DATABASE=os.getenv("CHROMA_DATABASE"),
+            ASSEMBLYAI_API_KEY=os.getenv("ASSEMBLYAI_API_KEY"),
+            CARTESIA_API_KEY=os.getenv("CARTESIA_API_KEY"),
             LIVEKIT_URL=os.getenv("LIVEKIT_URL"),
             LIVEKIT_API_KEY=os.getenv("LIVEKIT_API_KEY"),
             LIVEKIT_API_SECRET=os.getenv("LIVEKIT_API_SECRET"),
+            SUPABASE_URL=os.getenv("SUPABASE_URL"),
+            SUPABASE_SECRET_KEY=os.getenv("SUPABASE_SECRET_KEY"),
+            SUPABASE_PUBLISHABLE_KEY=os.getenv("SUPABASE_PUBLISHABLE_KEY"),
             OPENAI_API_KEY=os.getenv("OPENAI_API_KEY"),
         )
     except Exception as e:

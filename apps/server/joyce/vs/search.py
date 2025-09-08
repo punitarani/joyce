@@ -1,244 +1,188 @@
 from __future__ import annotations
 
-import math
-import uuid
-from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
 
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
+from joyce.lm.embed import embed_texts
+from joyce.vs import get_chroma_store
+from joyce.vs.models import (
+    VectorSearchDocument,
+    VectorSearchQuery,
+    VectorSearchResponse,
+)
+from joyce.vs.similarity import calculate_hybrid_score
 
-from joyce.agent.embed import embed_texts
-from joyce.db.schema import Memory, MemoryChunk
 
-from .chroma import ChromaStore
-
-
-def calculate_hybrid_score(
-    distance: float,
-    created_at: str,
-    recency_weight: float = 0.15,
-    recency_decay_days: float = 90.0,
-) -> float:
+async def search_memories(
+    query: str,
+    user_id: str,
+    top_k: int = 5,
+    filters: Optional[Dict[str, Any]] = None,
+) -> VectorSearchResponse:
     """
-    Calculate hybrid score combining similarity and recency.
+    Primary memory search function using universal data models.
 
-    Based on research-backed approach:
-    - Converts distance to similarity (normalized 0-1)
-    - Applies gentle recency boost only when items are close in similarity
-    - Uses exponential decay with configurable half-life
+    This function provides a simplified, standardized interface for memory search
+    that follows vector search best practices and returns data ready for RAG.
 
     Args:
-        distance: ChromaDB L2 distance (lower = more similar)
-        created_at: ISO timestamp when memory was created
-        recency_weight: Weight for recency component (0.1-0.2 recommended)
-        recency_decay_days: Days for recency to decay to ~37% (1/e)
+        query: Search query text
+        user_id: User ID for scoping
+        top_k: Number of results to return
+        filters: Optional metadata filters (e.g., {"type": "personal"})
 
     Returns:
-        Combined score where higher = better
+        VectorSearchResponse with standardized document results
     """
-    # Convert distance to normalized similarity (0-1, higher = more similar)
-    similarity = 1.0 / (1.0 + distance)
-
-    # Calculate age in days
-    try:
-        timestamp = created_at.replace("Z", "+00:00")
-        dt = datetime.fromisoformat(timestamp)
-        if dt.tzinfo is None:
-            dt = dt.replace(tzinfo=timezone.utc)
-        age_days = (datetime.now(timezone.utc) - dt).total_seconds() / 86400.0
-        age_days = max(0.0, age_days)
-    except (ValueError, AttributeError):
-        age_days = recency_decay_days * 2  # Treat invalid timestamps as old
-
-    # Exponential decay recency factor (0-1, higher = more recent)
-    recency = math.exp(-age_days / recency_decay_days)
-
-    # Hybrid score: primarily similarity with gentle recency boost
-    # This ensures recency only matters when similarities are close
-    return similarity * (1.0 + recency_weight * recency)
-
-
-async def create_chunk_with_embedding(
-    session: AsyncSession,
-    chroma: ChromaStore,
-    memory_id: str,
-    user_id: str,
-    chunk_text: str,
-    embedding_model: str = "text-embedding-3-small",
-    chunk_metadata: Optional[Dict[str, Any]] = None,
-    tags: Optional[List[str]] = None,
-) -> str:
-    """Create a memory chunk and upsert its embedding to ChromaDB."""
-
-    # Create chunk record in database
-    chunk = MemoryChunk(
-        chunk_id=uuid.uuid4(),
-        memory_id=uuid.UUID(memory_id),
-        user_id=user_id,
-        chunk_text=chunk_text,
-        chunk_metadata=chunk_metadata or {},
-        text_length=len(chunk_text),
-        embedding_model=embedding_model,
-        vector_upserted=False,
+    search_query = VectorSearchQuery(
+        text=query,
+        top_k=top_k,
+        filters=filters or {},
     )
 
-    session.add(chunk)
-    await session.flush()  # Ensure chunk_id is available
-    chunk_id_str = str(chunk.chunk_id)
+    # Simple vector search (no reranking) scoped by user
+    chroma = get_chroma_store()
+    query_embeddings = await embed_texts([query])
+    query_embedding = query_embeddings[0]
 
-    try:
-        # Generate embedding using existing embed function
-        embeddings = await embed_texts([chunk_text])
-        embedding = embeddings[0]
+    where_clause = {"user_id": user_id}
+    raw_results = await chroma.query(
+        embedding=query_embedding, n_results=top_k, where=where_clause
+    )
 
-        # Create metadata for vector storage
-        vector_metadata = chroma.create_metadata(
-            user_id=user_id,
-            memory_id=memory_id,
-            chunk_id=chunk_id_str,
-            embedding_model=embedding_model,
-            tags=tags,
+    # Optional simple filtering by type/tags
+    filtered_results = []
+    for mem in raw_results or []:
+        if not filters or "type" not in filters:
+            filtered_results.append(mem)
+            continue
+
+        metadata = mem.get("metadata", {})
+        memory_type = metadata.get("type")
+        memory_tags = metadata.get("tags", "")
+        required_type = filters.get("type")
+
+        if isinstance(memory_tags, list):
+            available_tags = [
+                str(tag).strip() for tag in memory_tags if str(tag).strip()
+            ]
+        else:
+            available_tags = [
+                tag.strip() for tag in str(memory_tags).split(",") if tag.strip()
+            ]
+
+        if memory_type == required_type or required_type in available_tags:
+            filtered_results.append(mem)
+
+    documents: List[VectorSearchDocument] = []
+    for mem in filtered_results:
+        documents.append(
+            VectorSearchDocument.from_chroma_result(
+                id=mem.get("id"),
+                document=mem.get("document"),
+                metadata=mem.get("metadata"),
+                distance=mem.get("distance"),
+            )
         )
 
-        # Upsert to ChromaDB
-        await chroma.add_vectors(
-            ids=[chunk_id_str],
-            embeddings=[embedding],
-            metadatas=[vector_metadata],
-            documents=[chunk_text[:2000]],  # Truncate for storage
-        )
-
-        # Mark as successfully upserted
-        chunk.vector_upserted = True
-        session.add(chunk)
-
-    except Exception as e:
-        # Log error but don't fail the operation
-        print(f"Failed to upsert embedding for chunk {chunk_id_str}: {e}")
-        chunk.vector_upserted = False
-        session.add(chunk)
-
-    await session.commit()
-    return chunk_id_str
+    return VectorSearchResponse(
+        query=search_query,
+        documents=documents,
+        total_found=len(documents),
+    )
 
 
-async def semantic_search(
-    session: AsyncSession,
-    chroma: ChromaStore,
+async def search_memories_ranked(
     user_id: str,
     query: str,
     top_k: int = 6,
+    filters: Optional[Dict[str, Any]] = None,
     candidate_multiplier: int = 3,
-    category: Optional[str] = None,
-    tag_filter: Optional[List[str]] = None,
-) -> List[Dict[str, Any]]:
+) -> List[VectorSearchDocument]:
     """
     Perform semantic search with time-aware ranking.
 
     Args:
-        session: Database session
-        chroma: ChromaDB client
         user_id: User ID for scoping
         query: Search query text
         top_k: Number of final results to return
+        filters: Optional metadata filters (e.g., {"type": "personal"})
         candidate_multiplier: Fetch top_k * multiplier candidates for reranking
-        category: Content category for decay rate selection
         tag_filter: Optional list of tags to filter by
 
     Returns:
         List of ranked search results with memory information
     """
+    chroma = get_chroma_store()
 
     # Generate query embedding
     query_embeddings = await embed_texts([query])
     query_embedding = query_embeddings[0]
 
-    # Build where clause for user scoping
+    # Build where clause for user scoping only
+    # Note: Tag filtering is done post-query since ChromaDB doesn't support
+    # complex string operations on comma-separated tag strings
     where_clause = {"user_id": user_id}
-    if tag_filter:
-        # ChromaDB metadata filtering syntax
-        where_clause["tags"] = {"$in": tag_filter}
 
     # Retrieve candidates from ChromaDB
     n_candidates = top_k * candidate_multiplier
-    hits = await chroma.query(
+    memories = await chroma.query(
         embedding=query_embedding, n_results=n_candidates, where=where_clause
     )
 
-    if not hits:
+    if not memories:
         return []
 
-    # Extract memory IDs and fetch memory records
-    memory_ids = []
-    chunk_hit_map = {}
+    # Filter candidates by provided filters (supports simple "type"/tags filtering)
+    filtered_memories = []
+    for memory in memories:
+        metadata = memory.get("metadata", {})
+        memory_type = metadata.get("type")
+        memory_tags = metadata.get("tags", "")
 
-    for hit in hits:
-        memory_id = hit["metadata"].get("memory_id")
-        if memory_id:
-            memory_ids.append(memory_id)
-            chunk_hit_map[memory_id] = hit
+        if filters and "type" in filters:
+            required_type = filters.get("type")
 
-    # Fetch memory records
-    memory_records = {}
-    if memory_ids:
-        stmt = select(Memory).where(
-            Memory.memory_id.in_([uuid.UUID(mid) for mid in memory_ids]),
-            Memory.user_id == user_id,
-            not Memory.deleted,
-        )
-        result = await session.execute(stmt)
-        memory_records = {str(m.memory_id): m for m in result.scalars().all()}
+            # Normalize available tags to a list of strings
+            if isinstance(memory_tags, list):
+                available_tags = [
+                    str(tag).strip() for tag in memory_tags if str(tag).strip()
+                ]
+            else:
+                available_tags = [
+                    tag.strip() for tag in str(memory_tags).split(",") if tag.strip()
+                ]
 
-    # Prepare results for ranking
-    ranking_input = []
-    for hit in hits:
-        memory_id = hit["metadata"].get("memory_id")
-        memory_record = memory_records.get(memory_id)
+            # Keep if the required type matches either explicit type or tags
+            if memory_type != required_type and required_type not in available_tags:
+                continue
 
-        result_item = {
-            "chunk_id": hit["id"],
-            "distance": hit["distance"],
-            "metadata": hit["metadata"],
-            "document": hit.get("document"),
-            "memory_id": memory_id,
-            "memory": (
-                {
-                    "title": memory_record.title if memory_record else None,
-                    "summary": memory_record.summary if memory_record else None,
-                    "type": memory_record.type if memory_record else None,
-                    "payload": memory_record.payload if memory_record else {},
-                    "tags": memory_record.tags if memory_record else [],
-                }
-                if memory_record
-                else None
-            ),
-        }
-        ranking_input.append(result_item)
+        filtered_memories.append(memory)
 
-    # Apply hybrid scoring and ranking
-    scored_results = []
-    for item in ranking_input:
-        # Get timestamp from metadata or memory record
-        created_at = None
-        if item["memory"] and item["memory"].get("payload"):
-            created_at = item["memory"]["payload"].get("created_at")
-        if not created_at and item["metadata"]:
-            created_at = item["metadata"].get("created_at")
+    # Prepare VectorSearchDocuments with hybrid scoring
+    results: List[VectorSearchDocument] = []
+    for mem in filtered_memories:
+        metadata = mem.get("metadata") or {}
+        distance = mem.get("distance")
+        document = mem.get("document")
 
-        if created_at:
-            hybrid_score = calculate_hybrid_score(
-                distance=item["distance"], created_at=created_at
-            )
+        created_at = metadata.get("created_at") if metadata else None
+        if created_at is not None:
+            score = calculate_hybrid_score(distance=distance, created_at=created_at)
         else:
-            # Fallback to similarity-only scoring for items without timestamps
-            hybrid_score = 1.0 / (1.0 + item["distance"])
+            score = 1.0 / (1.0 + distance)
 
-        item["hybrid_score"] = hybrid_score
-        scored_results.append(item)
+        doc = VectorSearchDocument.from_chroma_result(
+            id=mem.get("id"),
+            document=document,
+            metadata=metadata,
+            distance=distance,
+        )
+        # Overwrite score with hybrid score
+        doc.score = score
+        results.append(doc)
 
-    # Sort by hybrid score (descending - higher is better)
-    scored_results.sort(key=lambda x: x["hybrid_score"], reverse=True)
+    # Sort by score (descending - higher is better)
+    results.sort(key=lambda d: (d.score if d.score is not None else 0.0), reverse=True)
 
     # Return top K results
-    return scored_results[:top_k]
+    return results[:top_k]
